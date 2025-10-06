@@ -1,0 +1,4 @@
+cd server
+pnpm format
+cd ../web
+pnpm format
