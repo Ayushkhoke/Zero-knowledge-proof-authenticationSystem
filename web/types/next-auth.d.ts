@@ -8,6 +8,13 @@ declare module 'next-auth' {
     avatarUrl?: string;
     role: string;
     token: string;
+    authMethod?: string;
+    blockchain?: {
+      address: string | null;
+      transactionHash: string | null;
+      blockNumber: number | null;
+      chainId: number | null;
+    };
   }
   interface Session {
     user: {
@@ -17,6 +24,13 @@ declare module 'next-auth' {
       avatarUrl?: string;
       role: string;
       token: string;
+      authMethod?: string;
+      blockchain?: {
+        address: string | null;
+        transactionHash: string | null;
+        blockNumber: number | null;
+        chainId: number | null;
+      };
     };
   }
 
@@ -27,5 +41,12 @@ declare module 'next-auth' {
     avatarUrl?: string;
     role: string;
     token: string;
+    authMethod?: string;
+    blockchain?: {
+      address: string | null;
+      transactionHash: string | null;
+      blockNumber: number | null;
+      chainId: number | null;
+    };
   }
 }

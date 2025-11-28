@@ -22,6 +22,12 @@ model User {
   zkpCommitment String? @map("zkp_commitment") // Hash of the user's secret (public commitment)
   zkpPublicKey  String? @map("zkp_public_key") // Public key for verification
 
+  // Blockchain fields
+  blockchainAddress String? @map("blockchain_address") // User's commitment stored on blockchain
+  transactionHash   String? @map("transaction_hash") // Transaction hash for commitment storage
+  blockNumber       Int?    @map("block_number") // Block number where commitment was stored
+  chainId           Int?    @map("chain_id") // Chain ID (11155111 for Sepolia)
+
   @@map("users")
 }
 

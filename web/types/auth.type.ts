@@ -12,6 +12,12 @@ export type LoginResponse = {
     avatarUrl: string | null;
     role: UserRole;
     authMethod?: string;
+    blockchain?: {
+      address: string | null;
+      transactionHash: string | null;
+      blockNumber: number | null;
+      chainId: number | null;
+    };
   };
 };
 

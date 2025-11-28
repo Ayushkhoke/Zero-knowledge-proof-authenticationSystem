@@ -36,4 +36,10 @@ export const config = {
     username: process.env.LOKI_USERNAME!,
     password: process.env.LOKI_PASSWORD!,
   },
+  blockchain: {
+    rpcUrl: process.env.BLOCKCHAIN_RPC_URL!, // Sepolia RPC URL
+    privateKey: process.env.BLOCKCHAIN_PRIVATE_KEY!, // Private key for signing transactions
+    contractAddress: process.env.BLOCKCHAIN_CONTRACT_ADDRESS!, // Deployed contract address
+    chainId: parseInt(process.env.BLOCKCHAIN_CHAIN_ID || '11155111', 10), // Sepolia chain ID
+  },
 };

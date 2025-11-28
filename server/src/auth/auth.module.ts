@@ -6,10 +6,12 @@ import { PrismaModule } from 'src/prisma/prisma.module';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { config } from 'src/common/config';
+import { BlockchainModule } from 'src/blockchain/blockchain.module';
 
 @Module({
   imports: [
     PrismaModule,
+    BlockchainModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
       secret: config.jwt.secret,

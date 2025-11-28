@@ -39,6 +39,8 @@ const zkpCredentialsProvider = CredentialsProvider({
           role: res.data.user.role,
           name: res.data.user.name ?? 'ZKP User',
           avatarUrl: res.data.user.avatarUrl ?? '',
+          authMethod: res.data.user.authMethod,
+          blockchain: res.data.user.blockchain,
         } satisfies User;
       }
 
@@ -93,6 +95,8 @@ export const authOptions: AuthOptions = {
         token.role = user.role;
         token.avatarUrl = user.avatarUrl || '';
         token.token = user.token;
+        token.authMethod = user.authMethod;
+        token.blockchain = user.blockchain;
       }
       return token;
     },
@@ -104,6 +108,15 @@ export const authOptions: AuthOptions = {
         session.user.avatarUrl = token.avatarUrl as string;
         session.user.role = token.role as string;
         session.user.token = token.token as string;
+        session.user.authMethod = token.authMethod as string | undefined;
+        session.user.blockchain = token.blockchain as
+          | {
+              address: string | null;
+              transactionHash: string | null;
+              blockNumber: number | null;
+              chainId: number | null;
+            }
+          | undefined;
       }
       return session;
     },

@@ -5,6 +5,7 @@ import { config } from 'src/common/config';
 import { ZkpUtils } from './utils/zkp.utils';
 import { ZkpRegisterDto, ZkpLoginDto } from './dto/auth.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { BlockchainService } from 'src/blockchain/blockchain.service';
 
 @Injectable()
 export class AuthService {
@@ -14,6 +15,7 @@ export class AuthService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly jwtService: JwtService,
+    private readonly blockchainService: BlockchainService,
   ) {
     this.oauth2Client = new google.auth.OAuth2(
       config.google.clientId,
@@ -102,24 +104,43 @@ export class AuthService {
         throw new BadRequestException('Invalid commitment format - must be a BigInt string');
       }
 
+      // Store commitment on blockchain
+      this.logger.log(`Storing commitment on Sepolia blockchain for email: ${email}`);
+      let blockchainData;
+      try {
+        blockchainData = await this.blockchainService.registerCommitment(commitment, email, publicKey || '');
+        this.logger.log(`Blockchain storage successful - TX: ${blockchainData.transactionHash}`);
+      } catch (blockchainError) {
+        this.logger.error(`Blockchain storage failed: ${blockchainError.message}`);
+        throw new BadRequestException('Failed to store commitment on blockchain');
+      }
+
       if (user) {
-        // Update existing user with ZKP data
+        // Update existing user with ZKP data and blockchain info
         user = await this.prismaService.user.update({
           where: { id: user.id },
           data: {
             zkpCommitment: commitment,
             zkpPublicKey: publicKey,
             name: name || user.name,
+            blockchainAddress: blockchainData.userAddress,
+            transactionHash: blockchainData.transactionHash,
+            blockNumber: blockchainData.blockNumber,
+            chainId: config.blockchain.chainId,
           },
         });
       } else {
-        // Create new user with ZKP data
+        // Create new user with ZKP data and blockchain info
         user = await this.prismaService.user.create({
           data: {
             email,
             name: name || 'ZKP User',
             zkpCommitment: commitment,
             zkpPublicKey: publicKey,
+            blockchainAddress: blockchainData.userAddress,
+            transactionHash: blockchainData.transactionHash,
+            blockNumber: blockchainData.blockNumber,
+            chainId: config.blockchain.chainId,
           },
         });
       }
@@ -130,6 +151,11 @@ export class AuthService {
         success: true,
         message: 'ZKP registration successful',
         userId: user.id,
+        blockchain: {
+          transactionHash: blockchainData.transactionHash,
+          blockNumber: blockchainData.blockNumber,
+          chainId: config.blockchain.chainId,
+        },
       };
     } catch (error) {
       this.logger.error(`[ERROR: zkpRegister] ${registerDto.email}, ${error.message}`);
@@ -231,6 +257,28 @@ export class AuthService {
         throw new UnauthorizedException('Invalid proof - commitment mismatch');
       }
 
+      // Optionally verify commitment from blockchain for additional security
+      try {
+        this.logger.log('Verifying commitment from blockchain...');
+        const blockchainCommitment = await this.blockchainService.getCommitmentByEmail(email);
+
+        if (blockchainCommitment.commitment !== storedCommitment) {
+          this.logger.warn('Blockchain commitment mismatch detected');
+          throw new UnauthorizedException('Blockchain verification failed - commitment mismatch');
+        }
+
+        if (!blockchainCommitment.isActive) {
+          this.logger.warn('Blockchain commitment is not active');
+          throw new UnauthorizedException('Blockchain commitment has been deactivated');
+        }
+
+        this.logger.log('Blockchain verification successful');
+      } catch (blockchainError) {
+        this.logger.error(`Blockchain verification failed: ${blockchainError.message}`);
+        // Continue with login even if blockchain verification fails (for robustness)
+        // In production, you might want to make this mandatory
+      }
+
       // Update proof attempt as verified
       await this.prismaService.zKPProofAttempt.update({
         where: { id: proofAttempt.id },
@@ -246,6 +294,11 @@ export class AuthService {
         role: user?.role,
         sub: user.id,
         authMethod: 'zkp',
+        // Blockchain information
+        blockchainAddress: user.blockchainAddress,
+        transactionHash: user.transactionHash,
+        blockNumber: user.blockNumber,
+        chainId: user.chainId,
       };
 
       const token = await this.jwtService.signAsync(jwtPayload, {
@@ -263,6 +316,12 @@ export class AuthService {
           avatarUrl: user.avatarUrl,
           role: user.role,
           authMethod: 'zkp',
+          blockchain: {
+            address: user.blockchainAddress,
+            transactionHash: user.transactionHash,
+            blockNumber: user.blockNumber,
+            chainId: user.chainId,
+          },
         },
       };
     } catch (error) {

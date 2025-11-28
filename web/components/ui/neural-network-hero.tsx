@@ -175,7 +175,7 @@ function ShaderPlane() {
 
   return (
     <mesh ref={meshRef} position={[0, -0.75, -0.5]}>
-      <planeGeometry args={[4, 4]} />
+      <planeGeometry args={[8, 6]} />
       <cPPNShaderMaterial ref={materialRef} side={THREE.DoubleSide} />
     </mesh>
   );
@@ -185,7 +185,7 @@ function ShaderBackground() {
   const canvasRef = useRef<HTMLDivElement | null>(null);
 
   const camera = useMemo(
-    () => ({ position: [0, 0, 1] as [number, number, number], fov: 75, near: 0.1, far: 2000 }),
+    () => ({ position: [0, 0, 1] as [number, number, number], fov: 90, near: 0.1, far: 2000 }),
     []
   );
 
@@ -212,7 +212,7 @@ function ShaderBackground() {
   );
 
   return (
-    <div ref={canvasRef} className='absolute inset-0 -z-10 h-full w-full bg-black' aria-hidden>
+    <div ref={canvasRef} className='absolute inset-0 -z-10 h-full w-full' aria-hidden>
       <Canvas
         camera={camera}
         gl={{ antialias: true, alpha: false }}
@@ -221,7 +221,6 @@ function ShaderBackground() {
       >
         <ShaderPlane />
       </Canvas>
-      <div className='pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/20' />
     </div>
   );
 }
@@ -245,7 +244,7 @@ export default function Hero({
     { text: 'Get started', href: '#get-started', primary: true },
     { text: 'View showcase', href: '#showcase' },
   ],
-  microDetails = ['Low‑weight font', 'Tight tracking', 'Subtle motion'],
+  microDetails = [],
 }: HeroProps) {
   const sectionRef = useRef<HTMLElement | null>(null);
   const headerRef = useRef<HTMLHeadingElement | null>(null);
