@@ -23,7 +23,7 @@ import { config } from './common/config';
                 ignore: 'pid,hostname',
                 messageFormat: '[{req.id}] {req.method} {req.url} - {msg}  {res.statusCode} {responseTime}',
               },
-            }
+            },
           ],
         },
         redact: ['req.headers', 'res.headers'],
